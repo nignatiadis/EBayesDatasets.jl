@@ -7,6 +7,8 @@ struct MovieLens <: EBayesDataset
      X_df::DataFrame
      Zs_train::NormalSamples
      Zs_test::NormalSamples
+     train_sd::Float64
+     test_sd::Float64
 end
 
 const movie_genres = [("Action", "Action"),
@@ -143,7 +145,7 @@ function MovieLens(n_min_train, n_min_test, seed_id, prop_test)
         MovieLens( n_min_train, n_min_test, seed_id, prop_test,
                    movie_df,
                    df_X,
-                   train_Zs,
-                   test_Zs)
+                   train_Zs, test_Zs,
+                   train_sd, test_sd)
 end
 
