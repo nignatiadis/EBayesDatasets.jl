@@ -28,9 +28,11 @@ module EBayesDatasets
 
     abstract type EBayesBenchmark end
 
-    #brown_batting
+    #Brown Batting dataset
     include("brown_batting.jl")
 
+    #MovieLens.jl time
+    include("movielens.jl")
 
 
     function __init__()
