@@ -9,11 +9,17 @@ struct BrownBatting <: EBayesDataset
     n_min_test::Int
     raw_df::DataFrame
     df::DataFrame
+    players::Symbol
 end
 
-BrownBatting() = BrownBatting(11, 11)
+broadcastable(br::BrownBatting) = Ref(BrownBatting)
 
-function BrownBatting(n_min_train, n_min_test)
+
+function BrownBatting(; n_min_train=11, n_min_test=11, players=:all)
+    BrownBatting(n_min_train, n_min_test, players)
+end
+
+function BrownBatting(n_min_train, n_min_test, symbol)
     raw_df = CSV.File(brown_path,
                       normalizenames=true) |>
              DataFrame
@@ -35,22 +41,37 @@ function BrownBatting(n_min_train, n_min_test)
     batting_clean[:H_test] = convert(Vector{Int64}, batting_clean[:H_test])
     batting_clean[:AB_train] = convert(Vector{Int64}, batting_clean[:AB_train])
     batting_clean[:AB_test] = convert(Vector{Int64}, batting_clean[:AB_test])
+    batting_clean[:Pitcher] = categorical(batting_clean[:Pitcher])
 
-    BrownBatting(n_min_train, n_min_test, raw_df, batting_clean)
-
+    if symbol == :pitchers
+        batting_clean = DataFrames.filter(row -> row[:Pitcher] != 0, batting_clean)
+    elseif symbol == :nonpitchers
+        batting_clean = DataFrames.filter(row -> row[:Pitcher] == 0, batting_clean)
+    end
+    BrownBatting(n_min_train, n_min_test, raw_df, batting_clean, symbol)
 end
 
 #
 function traindata(br::BrownBatting)
     batting_clean = br.df
-    EBayesCore.HeteroskedasticBinomialSamples(batting_clean[:H_train],
-                                              batting_clean[:AB_train])
+    if br.players == :all
+        X = DataFrames.select(batting_clean, [:AB_train, :Pitcher])
+    else
+        X =DataFrames.select(batting_clean, :AB_train)
+    end
+
+    Y = HeteroskedasticBinomialSamples(batting_clean[:H_train],
+                                       batting_clean[:AB_train])
+    # figure out how to properly transform later.
+    Y = transform(ArcsineTransform(), Y)
+    (X,Y)
 end
 
 function testdata(br::BrownBatting)
     batting_clean = br.df
-    EBayesCore.HeteroskedasticBinomialSamples(batting_clean[:H_test],
-                                              batting_clean[:AB_test])
+    Y = HeteroskedasticBinomialSamples(batting_clean[:H_test],
+                                       batting_clean[:AB_test])
+    transform(ArcsineTransform(), Y)
 end
 
 #function traindata(br::BrownBatting, HeteroskedasticNormalSamples)
@@ -69,28 +90,31 @@ end
 
 NormalizedTSE() = NormalizedTSE(EBayesCore.FlatPrior())
 
+broadcastable(bench::EBayesBenchmark) = Ref(bench)
 
-
-function benchmark(br::BrownBatting, tse::TSE, method::Tuple)
-    ss_train = traindata(br)
+function benchmark(br::BrownBatting, tse::TSE, method)
+    X, ss_train = traindata(br)
     ss_test = testdata(br)
 
-    transf = default_transform(tse)
-    test_z_score = predict(EBayesCore.FlatPrior(), transf, ss_test)
+    #transf = default_transform(tse)
+    test_z_score = predict(EBayesCore.FlatPrior(), ss_test)
 
-    pred_z_score = predict(method..., transf, ss_train)
-    error_vec = (test_z_score .- pred_z_score).^2 .- 1 ./ (4 .* ss_test.Ns)
-    keep_idx = ss_test.Ns .>= br.n_min_test
+    pred_z_score = predict(method, X, ss_train)
+    error_vec = (test_z_score .- pred_z_score).^2 .- ss_test.σ.^2
+    #keep_idx = ss_test.Ns .>= br.n_min_test
+    keep_idx = ss_test.σ.^2 .<= 1/(4*br.n_min_test)
 
     sum(error_vec[keep_idx])
 end
 
-function benchmark(br::BrownBatting, tse::TSE, method)
-    benchmark(br, tse, (method,))
-end
+#function benchmark(br::BrownBatting, tse::TSE, method)
+#    benchmark(br, tse, (method,))
+#end
 
 function benchmark(br::BrownBatting, tse::NormalizedTSE, method)
     baseline_tse = benchmark(br, TSE(), tse.baseline_method)
     method_tse = benchmark(br, TSE(), method)
     method_tse/baseline_tse
 end
+
+benchmark(br::BrownBatting, method) = benchmark(br, NormalizedTSE(), method)

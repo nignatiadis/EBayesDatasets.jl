@@ -5,7 +5,11 @@ version = "0.1.0"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
 DataDeps = "124859b0-ceae-595e-8997-d05f6a7a8dfe"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 EBayesCore = "d8757fcc-20ff-11e9-3028-574e985b16f2"
+GroupLens = "4b9912e6-151a-11e9-3883-af9af141a5ba"
 Query = "1a8c2f83-1ff3-5112-b086-8aa67b057ba1"
+Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
+ShapeConstrainedStats = "f73efea4-6d21-11e9-25ff-9b1447cfbccb"
