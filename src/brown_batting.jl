@@ -55,9 +55,9 @@ end
 function traindata(br::BrownBatting)
     batting_clean = br.df
     if br.players == :all
-        X = DataFrames.select(batting_clean, [:AB_train, :Pitcher])
+        X = batting_clean[[:AB_train, :Pitcher]]
     else
-        X =DataFrames.select(batting_clean, :AB_train)
+        X = batting_clean[[:AB_train]] #maybe expose vector later.
     end
 
     Y = HeteroskedasticBinomialSamples(batting_clean[:H_train],
