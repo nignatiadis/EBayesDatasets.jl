@@ -5,9 +5,8 @@ module EBayesDatasets
     using DataDeps
     using DataFrames
     using Query
-    using EBayesCore
+    using EBayes
 
-    import EBayesCore:transform
     import Base.Broadcast: broadcastable
 
     # Datasets I used for movie lens (split up into individual modules later)
@@ -26,21 +25,20 @@ module EBayesDatasets
     abstract type EBayesDataset end
     broadcastable(eb_dataset::EBayesDataset) = Ref(eb_dataset)
 
-    abstract type EBayesBenchmark end
 
-    #Brown Batting dataset
-    include("brown_batting.jl")
+    #Brown Batting dataset -> do not load this temporarily
+    # include("brown_batting.jl")
 
-    #MovieLens.jl time
+    #Load MovieLens.jl
     include("movielens.jl")
 
 
-    function __init__()
-        register(DataDep(
-          "communities-and-crime",
-          "https://archive.ics.uci.edu/ml/datasets/Communities+and+Crime+Unnormalized",
-          "https://archive.ics.uci.edu/ml/machine-learning-databases/00211/CommViolPredUnnormalizedData.txt",
-          "383a9530b2802b4457986095b13af8f02a802a2504feaef45783f9c129e003f1"
-        ))
-    end
+    #function __init__()
+    #    register(DataDep(
+    #      "communities-and-crime",
+    #      "https://archive.ics.uci.edu/ml/datasets/Communities+and+Crime+Unnormalized",
+    #      "https://archive.ics.uci.edu/ml/machine-learning-databases/00211/CommViolPredUnnormalizedData.txt",
+    #      "383a9530b2802b4457986095b13af8f02a802a2504feaef45783f9c129e003f1"
+    #    ))
+    #end
 end # module
