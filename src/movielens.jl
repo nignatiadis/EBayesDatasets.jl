@@ -113,9 +113,6 @@ function MovieLens(n_min_train, n_min_test, seed_id, prop_test)
 
 
 
-        #mle_error = mean((truth .- preds_mle).^2 .- test_sds.^2)
-
-
         # construct Genre features...
         genres = JuliaDB.select(movie_df, :genres)
         movie_genre_dict = Dict(first.(movie_genres) .=> 1:19)
@@ -142,10 +139,14 @@ function MovieLens(n_min_train, n_min_test, seed_id, prop_test)
             df_X[Symbol(genre)] = feature_mat[:, i]
         end
 
-        MovieLens( n_min_train, n_min_test, seed_id, prop_test,
+        MovieLens( n_min_train,
+                   n_min_test,
+                   seed_id,
+                   prop_test,
                    movie_df,
                    df_X,
                    train_Zs, test_Zs,
                    train_sd, test_sd)
 end
+
 
